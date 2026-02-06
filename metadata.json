@@ -2,6 +2,7 @@
   "name": "Survey Store Ghana: Professional Surveying Marketplace",
   "description": "Ghana's leading marketplace for buying, selling, and renting professional surveying equipment. Powered by AI for smart listings and search.",
   "requestFramePermissions": [
-    "camera"
+    "camera",
+    "geolocation"
   ]
 }
