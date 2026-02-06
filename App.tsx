@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Layout from './components/Layout';
-import ListingBrowser from './pages/ListingBrowser';
-import ListingDetails from './pages/ListingDetails';
-import CreateListing from './pages/CreateListing';
-import Dashboard from './pages/Dashboard';
-import Profile from './pages/Profile';
-import { MOCK_USERS } from './constants';
-import { User } from './types';
+import Layout from './components/Layout.tsx';
+import ListingBrowser from './pages/ListingBrowser.tsx';
+import ListingDetails from './pages/ListingDetails.tsx';
+import CreateListing from './pages/CreateListing.tsx';
+import Dashboard from './pages/Dashboard.tsx';
+import Profile from './pages/Profile.tsx';
+import { MOCK_USERS } from './constants.tsx';
+import { User } from './types.ts';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(MOCK_USERS[0]); // Defaulting to James Survey for demo purposes
