@@ -5,13 +5,13 @@
   force = false
 
 [[headers]]
-  for = "/*.ts"
+  for = "/**/*.ts"
   [headers.values]
     Content-Type = "application/javascript"
     X-Content-Type-Options = "nosniff"
 
 [[headers]]
-  for = "/*.tsx"
+  for = "/**/*.tsx"
   [headers.values]
     Content-Type = "application/javascript"
     X-Content-Type-Options = "nosniff"
