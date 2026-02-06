@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,409 +9,38 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         .brand-navy { color: #1a2332; }
         .bg-brand-navy { background-color: #1a2332; }
+        
         @keyframes marquee {
             0% { transform: translateX(0); }
             100% { transform: translateX(-50%); }
         }
-        .animate-marquee { animation: marquee 30s linear infinite; }
+        .animate-marquee {
+            animation: marquee 30s linear infinite;
+        }
+        .animate-marquee:hover {
+            animation-play-state: paused;
+        }
     </style>
-    <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@18.3.1",
-        "react/": "https://esm.sh/react@18.3.1/",
-        "react-dom": "https://esm.sh/react-dom@18.3.1",
-        "react-dom/": "https://esm.sh/react-dom@18.3.1/",
-        "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
-        "@google/genai": "https://esm.sh/@google/genai@^1.39.0",
-        "react-router-dom": "https://esm.sh/react-router-dom@6.28.0?deps=react@18.3.1,react-dom@18.3.1",
-        "lucide-react": "https://esm.sh/lucide-react@0.460.0?deps=react@18.3.1"
-      }
-    }
-    </script>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.3.1",
+    "react/": "https://esm.sh/react@18.3.1/",
+    "react-dom": "https://esm.sh/react-dom@18.3.1",
+    "react-dom/": "https://esm.sh/react-dom@18.3.1/",
+    "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+    "@google/genai": "https://esm.sh/@google/genai@^1.39.0",
+    "react-router-dom": "https://esm.sh/react-router-dom@6.28.0?deps=react@18.3.1,react-dom@18.3.1",
+    "lucide-react": "https://esm.sh/lucide-react@0.460.0?deps=react@18.3.1"
+  }
+}
+</script>
 </head>
 <body class="bg-slate-50 text-slate-900 overflow-x-hidden">
     <div id="root"></div>
-    <script type="text/babel" data-type="module" data-presets="typescript,react">
-        import React, { useState, useEffect, useRef } from 'react';
-        import ReactDOM from 'react-dom/client';
-        import { HashRouter, Routes, Route, Navigate, Link, useLocation, useParams } from 'react-router-dom';
-        import { 
-          Search, PlusSquare, User, Menu, X, ShoppingBag, Compass, Briefcase, MapPin, 
-          Filter, SlidersHorizontal, Star, Zap, ShoppingCart, Calendar, Check, 
-          ChevronDown, ShieldCheck, Award, Truck, ArrowRight, Activity, Cpu, 
-          ChevronLeft, ShieldAlert, MessageCircle, Share2, Info, CheckCircle2, 
-          Loader2, Camera, ArrowLeft, Settings, Package, Clock, Landmark, ArrowUpRight
-        } from 'lucide-react';
-        import { GoogleGenAI, Type } from "@google/genai";
-
-        // --- Types & Constants ---
-        const EquipmentCategory = {
-          TOTAL_STATIONS: 'Total Stations',
-          GNSS_GPS: 'GNSS/GPS',
-          DRONES: 'Drones/UAV',
-          LASER_LEVELS: 'Laser Levels',
-          TRIPODS_ACCESSORIES: 'Tripods & Accessories',
-          SCANNERS: '3D Laser Scanners',
-          THEODOLITES: 'Theodolites',
-          OPTICAL_LEVELS: 'Optical Levels',
-          OTHER: 'Other'
-        };
-
-        const Condition = {
-          NEW: 'New',
-          LIKE_NEW: 'Like New',
-          EXCELLENT: 'Excellent',
-          GOOD: 'Good',
-          FAIR: 'Fair'
-        };
-
-        const TransactionType = {
-          SALE: 'Sale',
-          RENTAL: 'Rental',
-          BOTH: 'Both'
-        };
-
-        const MOCK_USERS = [
-          { id: 'u1', name: 'James Survey', email: 'james@example.com', role: 'seller', rating: 4.8, totalTransactions: 42, avatar: 'https://picsum.photos/seed/u1/100/100' },
-          { id: 'u2', name: 'Sarah Eng', email: 'sarah@example.com', role: 'buyer', rating: 4.9, totalTransactions: 12, avatar: 'https://picsum.photos/seed/u2/100/100' }
-        ];
-
-        const MOCK_LISTINGS = [
-          {
-            id: 'l1',
-            sellerId: 'u1',
-            title: 'Leica TS16 P 1" R1000 Robotic Total Station',
-            description: 'Highly accurate robotic total station for demanding engineering projects. Captures data automatically with dynamic lock technology.',
-            category: EquipmentCategory.TOTAL_STATIONS,
-            condition: Condition.EXCELLENT,
-            transactionType: TransactionType.BOTH,
-            salePrice: 18500,
-            rentalPriceDaily: 250,
-            location: 'Accra, Greater Accra',
-            images: ['https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80&w=800'],
-            specs: { 'Brand': 'Leica', 'Accuracy': '1"', 'EDM Range': '1000m', 'Type': 'Robotic' },
-            isApproved: true,
-            createdAt: new Date().toISOString()
-          },
-          {
-            id: 'l2',
-            sellerId: 'u1',
-            title: 'Trimble R12i GNSS RTK System',
-            description: 'Top-of-the-line GNSS system with ProPoint technology and tip compensation.',
-            category: EquipmentCategory.GNSS_GPS,
-            condition: Condition.LIKE_NEW,
-            transactionType: TransactionType.RENTAL,
-            rentalPriceDaily: 350,
-            location: 'Kumasi, Ashanti',
-            images: ['https://images.unsplash.com/photo-1580619305218-8423a7ef79b4?auto=format&fit=crop&q=80&w=800'],
-            specs: { 'Brand': 'Trimble', 'Model': 'R12i', 'Tilt': 'IMU-based' },
-            isApproved: true,
-            createdAt: new Date().toISOString()
-          }
-        ];
-
-        // --- Gemini Service ---
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-        async function analyzeEquipmentImage(base64Image) {
-          try {
-            const response = await ai.models.generateContent({
-              model: "gemini-3-flash-preview",
-              contents: {
-                parts: [
-                  { inlineData: { mimeType: 'image/jpeg', data: base64Image } },
-                  { text: "Analyze this surveying equipment. Suggest a professional title, identify its category, estimate its condition, and provide a technical description. Also suggest a fair market sale price and a daily rental price in USD." }
-                ]
-              },
-              config: {
-                responseMimeType: "application/json",
-                responseSchema: {
-                  type: Type.OBJECT,
-                  properties: {
-                    title: { type: Type.STRING },
-                    category: { type: Type.STRING },
-                    condition: { type: Type.STRING },
-                    description: { type: Type.STRING },
-                    suggestedSalePrice: { type: Type.NUMBER },
-                    suggestedRentalDaily: { type: Type.NUMBER }
-                  },
-                  required: ["title", "category", "condition", "description"]
-                }
-              }
-            });
-            return JSON.parse(response.text || "{}");
-          } catch (e) { return null; }
-        }
-
-        async function parseSmartSearch(query) {
-          try {
-            const response = await ai.models.generateContent({
-              model: "gemini-3-flash-preview",
-              contents: `Parse this search query for surveying equipment: "${query}".`,
-              config: {
-                responseMimeType: "application/json",
-                responseSchema: {
-                  type: Type.OBJECT,
-                  properties: {
-                    category: { type: Type.STRING },
-                    maxPrice: { type: Type.NUMBER },
-                    transactionType: { type: Type.STRING },
-                    brand: { type: Type.STRING }
-                  }
-                }
-              }
-            });
-            return JSON.parse(response.text || "{}");
-          } catch (e) { return null; }
-        }
-
-        // --- Components ---
-        const Layout = ({ children, user, onLogout }) => {
-          const [isMenuOpen, setIsMenuOpen] = useState(false);
-          const location = useLocation();
-          const navLinks = [
-            { name: 'Browse', path: '/', icon: <Search size={18} /> },
-            { name: 'List Equipment', path: '/list-equipment', icon: <PlusSquare size={18} /> },
-            { name: 'Dashboard', path: '/dashboard', icon: <Briefcase size={18} /> },
-          ];
-
-          return (
-            <div className="min-h-screen flex flex-col">
-              <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                  <div className="flex justify-between h-20 items-center">
-                    <Link to="/" className="flex items-center gap-3">
-                      <div className="text-[#1a2332]"><ShoppingBag size={32} fill="currentColor" /></div>
-                      <div className="flex flex-col leading-none">
-                        <span className="text-xl font-extrabold tracking-tighter text-[#1a2332] uppercase">Survey Store</span>
-                        <span className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">Ghana</span>
-                      </div>
-                    </Link>
-                    <div className="hidden md:flex items-center space-x-8">
-                      {navLinks.map((link) => (
-                        <Link key={link.path} to={link.path} className={`flex items-center gap-2 text-sm font-semibold ${location.pathname === link.path ? 'text-orange-600' : 'text-[#1a2332]'}`}>
-                          {link.icon} {link.name}
-                        </Link>
-                      ))}
-                      {user ? (
-                        <div className="flex items-center gap-4 pl-4 border-l border-slate-200">
-                          <button onClick={onLogout} className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Log out</button>
-                          <Link to="/profile" className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 overflow-hidden">
-                            <img src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}`} alt="User" />
-                          </Link>
-                        </div>
-                      ) : (
-                        <Link to="/auth" className="bg-[#1a2332] text-white px-5 py-2.5 rounded-xl text-sm font-bold">Sign In</Link>
-                      )}
-                    </div>
-                    <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>{isMenuOpen ? <X /> : <Menu />}</button>
-                  </div>
-                </div>
-              </nav>
-              <main className="flex-grow">{children}</main>
-              <footer className="bg-[#0f172a] text-slate-500 py-12 px-4 text-center">
-                 <p className="text-xs uppercase font-black tracking-widest">&copy; 2025 Survey Store Ghana</p>
-              </footer>
-            </div>
-          );
-        };
-
-        // --- Pages ---
-        const ListingBrowser = () => {
-          const [listings, setListings] = useState(MOCK_LISTINGS);
-          const [searchQuery, setSearchQuery] = useState('');
-          const [loading, setLoading] = useState(false);
-
-          const handleSearch = async (e) => {
-            e.preventDefault();
-            setLoading(true);
-            const parsed = await parseSmartSearch(searchQuery);
-            if (parsed && (parsed.category || parsed.brand)) {
-               const filtered = MOCK_LISTINGS.filter(l => 
-                  l.title.toLowerCase().includes(parsed.brand?.toLowerCase() || '') ||
-                  l.category.toLowerCase().includes(parsed.category?.toLowerCase() || '')
-               );
-               setListings(filtered);
-            } else {
-               setListings(MOCK_LISTINGS.filter(l => l.title.toLowerCase().includes(searchQuery.toLowerCase())));
-            }
-            setLoading(false);
-          };
-
-          return (
-            <div className="pb-20">
-              <section className="bg-[#1a2332] py-32 text-center px-4">
-                <h1 className="text-6xl font-black text-white uppercase tracking-tighter mb-6">Equipment <span className="text-orange-500">Marketplace</span></h1>
-                <p className="text-slate-400 text-lg mb-12 max-w-2xl mx-auto uppercase font-bold tracking-widest text-xs">Premium Geospatial Solutions in West Africa</p>
-                <form onSubmit={handleSearch} className="max-w-3xl mx-auto relative">
-                   <input 
-                      type="text" 
-                      placeholder="Search equipment... e.g. 'Leica Total Station'"
-                      className="w-full px-12 py-6 rounded-full text-xl font-bold outline-none shadow-2xl"
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                   />
-                   <button className="absolute right-4 top-4 bottom-4 bg-[#1a2332] text-white px-8 rounded-full font-bold">
-                     {loading ? '...' : <Search />}
-                   </button>
-                </form>
-              </section>
-              <div className="max-w-7xl mx-auto px-4 mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                 {listings.map(item => (
-                   <Link key={item.id} to={`/listing/${item.id}`} className="bg-white rounded-[2rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all border border-slate-100">
-                      <div className="aspect-[4/3] bg-slate-100"><img src={item.images[0]} className="w-full h-full object-cover" /></div>
-                      <div className="p-8">
-                        <span className="text-[10px] font-black uppercase text-orange-500 tracking-widest">{item.category}</span>
-                        <h3 className="text-xl font-black text-[#1a2332] mt-2 leading-tight uppercase">{item.title}</h3>
-                        <div className="mt-6 pt-6 border-t border-slate-50 flex justify-between items-center">
-                          <span className="text-xl font-black text-[#1a2332]">${item.salePrice || item.rentalPriceDaily}</span>
-                          <ArrowRight size={20} className="text-orange-500" />
-                        </div>
-                      </div>
-                   </Link>
-                 ))}
-              </div>
-            </div>
-          );
-        };
-
-        const ListingDetails = () => {
-          const { id } = useParams();
-          const item = MOCK_LISTINGS.find(l => l.id === id);
-          if (!item) return <div className="p-20 text-center font-black uppercase">Not Found</div>;
-
-          return (
-            <div className="max-w-7xl mx-auto px-4 py-20">
-              <Link to="/" className="inline-flex items-center gap-2 font-black uppercase text-xs tracking-widest mb-10"><ChevronLeft size={16}/> Back</Link>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                 <div className="aspect-square bg-slate-100 rounded-[3rem] overflow-hidden"><img src={item.images[0]} className="w-full h-full object-cover" /></div>
-                 <div className="p-10 bg-white rounded-[3rem] shadow-sm border border-slate-50">
-                    <span className="text-xs font-black text-orange-500 uppercase tracking-widest">{item.category}</span>
-                    <h1 className="text-4xl font-black text-[#1a2332] mt-4 uppercase tracking-tighter">{item.title}</h1>
-                    <p className="mt-8 text-slate-500 leading-relaxed text-lg">{item.description}</p>
-                    <div className="mt-12 text-5xl font-black text-[#1a2332] tracking-tighter">${item.salePrice || item.rentalPriceDaily}</div>
-                    <button className="w-full bg-[#1a2332] text-white py-6 rounded-3xl mt-12 font-black text-xl uppercase tracking-widest">Inquire Now</button>
-                 </div>
-              </div>
-            </div>
-          );
-        };
-
-        const CreateListing = () => {
-          const [loading, setLoading] = useState(false);
-          const [preview, setPreview] = useState(null);
-          const [form, setForm] = useState({ title: '', desc: '', category: '' });
-
-          const handleUpload = async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onloadend = async () => {
-              setPreview(reader.result);
-              setLoading(true);
-              const analysis = await analyzeEquipmentImage(reader.result.split(',')[1]);
-              if (analysis) setForm({ title: analysis.title, desc: analysis.description, category: analysis.category });
-              setLoading(false);
-            };
-            reader.readAsDataURL(file);
-          };
-
-          return (
-            <div className="max-w-4xl mx-auto px-4 py-20">
-              <h1 className="text-4xl font-black text-[#1a2332] uppercase tracking-tighter mb-12">List Equipment</h1>
-              <div className="bg-white rounded-[3rem] shadow-xl p-12 flex flex-col md:flex-row gap-12">
-                 <label className="md:w-1/3 aspect-square border-4 border-dashed rounded-[2rem] flex flex-col items-center justify-center cursor-pointer overflow-hidden">
-                    {preview ? <img src={preview} className="w-full h-full object-cover" /> : <div className="text-center p-4"><Camera size={48} className="mx-auto text-slate-300 mb-2"/><p className="text-[10px] font-black uppercase">Photo</p></div>}
-                    <input type="file" className="hidden" onChange={handleUpload}/>
-                 </label>
-                 <div className="flex-grow space-y-6">
-                    {loading && <div className="p-4 bg-orange-50 text-orange-600 rounded-2xl font-black text-xs uppercase animate-pulse">AI analyzing gear...</div>}
-                    <input type="text" placeholder="Title" value={form.title} className="w-full px-6 py-4 bg-slate-50 rounded-2xl font-bold" onChange={e => setForm({...form, title: e.target.value})}/>
-                    <textarea placeholder="Description" rows={5} value={form.desc} className="w-full px-6 py-4 bg-slate-50 rounded-2xl font-medium" onChange={e => setForm({...form, desc: e.target.value})}/>
-                    <button className="w-full bg-[#1a2332] text-white py-5 rounded-2xl font-black uppercase tracking-widest">Post Listing</button>
-                 </div>
-              </div>
-            </div>
-          );
-        };
-
-        const Dashboard = () => (
-          <div className="max-w-7xl mx-auto px-4 py-20">
-            <h1 className="text-4xl font-black text-[#1a2332] uppercase tracking-tighter mb-12">Dashboard</h1>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-               <div className="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                  <Package className="text-orange-500 mb-4" size={32}/>
-                  <div className="text-4xl font-black text-[#1a2332]">12</div>
-                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Active Listings</div>
-               </div>
-               <div className="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                  <Calendar className="text-orange-500 mb-4" size={32}/>
-                  <div className="text-4xl font-black text-[#1a2332]">04</div>
-                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Active Rentals</div>
-               </div>
-               <div className="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                  <ArrowUpRight className="text-orange-500 mb-4" size={32}/>
-                  <div className="text-4xl font-black text-[#1a2332]">GH₵ 25k</div>
-                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Total Earnings</div>
-               </div>
-            </div>
-          </div>
-        );
-
-        const Profile = ({ user }) => (
-          <div className="max-w-4xl mx-auto px-4 py-20">
-            <div className="bg-white p-12 rounded-[3.5rem] border border-slate-100 shadow-xl text-center">
-               <div className="w-32 h-32 rounded-full mx-auto overflow-hidden border-4 border-white shadow-lg mb-8">
-                  <img src={user?.avatar || 'https://ui-avatars.com/api/?name=User'} className="w-full h-full object-cover" />
-               </div>
-               <h1 className="text-3xl font-black text-[#1a2332] uppercase tracking-tighter">{user?.name}</h1>
-               <p className="text-slate-400 font-bold uppercase tracking-widest text-xs mt-2">{user?.email}</p>
-               <div className="mt-12 pt-12 border-t border-slate-50 flex justify-center gap-12">
-                  <div><div className="text-2xl font-black text-[#1a2332]">{user?.rating || '0.0'}</div><div className="text-[10px] font-black text-slate-400 uppercase">Rating</div></div>
-                  <div><div className="text-2xl font-black text-[#1a2332]">{user?.totalTransactions || '0'}</div><div className="text-[10px] font-black text-slate-400 uppercase">Sales</div></div>
-               </div>
-            </div>
-          </div>
-        );
-
-        // --- App ---
-        const App = () => {
-          const [user, setUser] = useState(MOCK_USERS[0]);
-          return (
-            <HashRouter>
-              <Layout user={user} onLogout={() => setUser(null)}>
-                <Routes>
-                  <Route path="/" element={<ListingBrowser />} />
-                  <Route path="/listing/:id" element={<ListingDetails />} />
-                  <Route path="/list-equipment" element={user ? <CreateListing /> : <Navigate to="/auth" />} />
-                  <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/auth" />} />
-                  <Route path="/profile" element={user ? <Profile user={user} /> : <Navigate to="/auth" />} />
-                  <Route path="/auth" element={
-                    <div className="py-20 flex justify-center px-4">
-                       <div className="bg-white p-12 rounded-[3rem] shadow-2xl border border-slate-50 max-w-sm w-full text-center">
-                          <h2 className="text-2xl font-black uppercase tracking-tighter text-[#1a2332] mb-10">Select Account</h2>
-                          <div className="space-y-4">
-                            {MOCK_USERS.map(u => (
-                              <button key={u.id} onClick={() => setUser(u)} className="w-full bg-[#1a2332] text-white py-4 rounded-2xl font-bold uppercase tracking-widest text-[10px] hover:bg-slate-800">{u.name}</button>
-                            ))}
-                          </div>
-                       </div>
-                    </div>
-                  } />
-                </Routes>
-              </Layout>
-            </HashRouter>
-          );
-        };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
 </body>
 </html>
