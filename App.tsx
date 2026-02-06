@@ -6,6 +6,7 @@ import ListingBrowser from './pages/ListingBrowser';
 import ListingDetails from './pages/ListingDetails';
 import CreateListing from './pages/CreateListing';
 import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
 import { MOCK_USERS } from './constants.tsx';
 import { User } from './types';
 
@@ -14,6 +15,10 @@ const App: React.FC = () => {
 
   const handleLogout = () => {
     setUser(null);
+  };
+
+  const handleUpdateUser = (updatedUser: User) => {
+    setUser(updatedUser);
   };
 
   return (
@@ -30,12 +35,15 @@ const App: React.FC = () => {
             path="/dashboard" 
             element={user ? <Dashboard /> : <Navigate to="/auth" />} 
           />
+          <Route 
+            path="/profile" 
+            element={user ? <Profile user={user} onUpdateUser={handleUpdateUser} /> : <Navigate to="/auth" />} 
+          />
           <Route path="/auth" element={
             <div className="flex items-center justify-center min-h-[75vh] px-4">
               <div className="bg-white p-12 md:p-16 rounded-[3rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] border border-slate-50 max-w-lg w-full text-center">
                 <div className="inline-flex items-center justify-center p-4 bg-slate-50 rounded-3xl mb-8">
                   <div className="text-[#1a2332]">
-                    {/* Visual approximation of the logo symbol */}
                     <div className="relative">
                       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-shopping-bag"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
                       <div className="absolute -bottom-1 -right-1 bg-white p-1 rounded-full shadow-md">

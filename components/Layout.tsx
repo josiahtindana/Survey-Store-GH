@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, PlusSquare, User, Menu, X, ShoppingCart, Briefcase, MapPin, ShoppingBag, Compass } from 'lucide-react';
+import { Search, PlusSquare, User, Menu, X, ShoppingBag, Compass, Briefcase, MapPin } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -25,7 +25,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
       <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-20 items-center">
-            {/* Logo Re-creation based on provided image */}
+            {/* Logo */}
             <Link to="/" className="flex items-center gap-3 group">
               <div className="relative flex items-center justify-center">
                 <div className="text-[#1a2332] transform -translate-x-1 translate-y-[-2px]">
@@ -63,12 +63,12 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
               {user ? (
                 <div className="flex items-center gap-4 pl-4 border-l border-slate-200">
                   <div className="flex flex-col items-end">
-                    <span className="text-xs font-bold text-slate-900 leading-tight">{user.name}</span>
+                    <Link to="/profile" className="text-xs font-bold text-slate-900 leading-tight hover:text-orange-500 transition-colors">{user.name}</Link>
                     <button onClick={onLogout} className="text-[10px] text-slate-400 hover:text-red-500 transition-colors uppercase tracking-wider font-bold">Log out</button>
                   </div>
-                  <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 overflow-hidden">
+                  <Link to="/profile" className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 overflow-hidden hover:border-orange-500 transition-all">
                     <img src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}`} alt="User" />
-                  </div>
+                  </Link>
                 </div>
               ) : (
                 <Link to="/auth" className="bg-[#1a2332] text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-slate-800 transition-all shadow-md active:scale-95">
@@ -98,6 +98,16 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
                 {link.name}
               </Link>
             ))}
+            {user && (
+              <Link
+                to="/profile"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 text-slate-700 font-bold"
+              >
+                <User size={18} />
+                My Profile
+              </Link>
+            )}
             {!user && (
               <Link
                 to="/auth"
