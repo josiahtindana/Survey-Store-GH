@@ -43,15 +43,10 @@
 </head>
 <body class="bg-slate-50 text-slate-900 overflow-x-hidden">
     <div id="root"></div>
-    <!-- 
-        Actual Entry Point 
-        We use text/babel + data-type="module" so Babel Standalone fetches and transpiles
-        App.tsx and all its recursive dependencies.
-    -->
     <script type="text/babel" data-type="module" data-presets="typescript,react">
         import React from 'react';
         import ReactDOM from 'react-dom/client';
-        import App from './App.tsx';
+        import App from '/App.tsx';
 
         const rootElement = document.getElementById('root');
         if (rootElement) {
