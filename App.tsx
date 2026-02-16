@@ -1,79 +1,166 @@
+import React, { useState, useEffect } from 'react';
+import { HashRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { createClient } from '@supabase/supabase-js';
+import { Loader2, Lock, Mail, ShoppingBag } from 'lucide-react';
 
-import React, { useState } from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import ListingBrowser from './pages/ListingBrowser';
 import ListingDetails from './pages/ListingDetails';
 import CreateListing from './pages/CreateListing';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
-import { MOCK_USERS } from './constants.tsx';
-import { User } from './types';
 
-const App: React.FC = () => {
-  const [user, setUser] = useState<User | null>(MOCK_USERS[0]); // Defaulting to James Survey for demo purposes
+// --- Supabase Config ---
+const SUPABASE_URL = 'https://plykrntpuquolzvrauqa.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_2hMyeBbzTMTQmAcraNlEUw_HToky5Tf';
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  const handleLogout = () => {
-    setUser(null);
-  };
+const AuthPage = () => {
+  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  const handleUpdateUser = (updatedUser: User) => {
-    setUser(updatedUser);
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      if (mode === 'signup') {
+        const { error } = await supabase.auth.signUp({ 
+          email, 
+          password, 
+          options: { data: { full_name: fullName } } 
+        });
+        if (error) throw error;
+        alert('Success! Check your email for verification.');
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        navigate('/dashboard');
+      }
+    } catch (err: any) { 
+      setError(err.message); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   return (
+    <div className="py-20 flex justify-center px-4 bg-slate-50 min-h-[80vh]">
+       <div className="bg-white p-10 md:p-16 rounded-[4rem] shadow-2xl border border-slate-50 max-w-lg w-full">
+          <div className="text-center mb-12">
+             <div className="inline-flex items-center justify-center p-6 bg-orange-50 text-orange-500 rounded-[2rem] mb-8 shadow-inner">
+                <Lock size={32} />
+             </div>
+             <h2 className="text-3xl font-black uppercase tracking-tighter text-[#1a2332]">
+                {mode === 'login' ? 'Welcome Back' : 'Create Profile'}
+             </h2>
+          </div>
+          <form onSubmit={handleAuth} className="space-y-6">
+             {error && <div className="p-4 bg-red-50 text-red-600 rounded-2xl text-[10px] font-black uppercase tracking-widest">{error}</div>}
+             {mode === 'signup' && (
+               <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block ml-2">Full Name</label>
+                  <input type="text" placeholder="John Doe" value={fullName} onChange={e => setFullName(e.target.value)} className="w-full px-8 py-5 bg-slate-50 rounded-2xl font-black text-[#1a2332] outline-none border-2 border-transparent focus:border-orange-500 transition-all" required />
+               </div>
+             )}
+             <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block ml-2">Work Email</label>
+                <div className="relative">
+                   <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
+                   <input type="email" placeholder="pro@survey.gh" value={email} onChange={e => setEmail(e.target.value)} className="w-full pl-16 pr-8 py-5 bg-slate-50 rounded-2xl font-black text-[#1a2332] outline-none border-2 border-transparent focus:border-orange-500 transition-all" required />
+                </div>
+             </div>
+             <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block ml-2">Passcode</label>
+                <div className="relative">
+                   <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
+                   <input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} className="w-full pl-16 pr-8 py-5 bg-slate-50 rounded-2xl font-black text-[#1a2332] outline-none border-2 border-transparent focus:border-orange-500 transition-all" required />
+                </div>
+             </div>
+             <button type="submit" disabled={loading} className="w-full bg-[#1a2332] text-white py-6 rounded-[2.5rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-orange-600 transition-all flex items-center justify-center gap-4">
+                {loading ? <Loader2 className="animate-spin" /> : (mode === 'login' ? 'Access Portal' : 'Register Profile')}
+             </button>
+          </form>
+          <div className="mt-12 text-center">
+             <button onClick={() => setMode(mode === 'login' ? 'signup' : 'login')} className="text-[10px] font-black text-orange-500 uppercase tracking-widest hover:underline decoration-2 underline-offset-8 transition-all">
+                {mode === 'login' ? "New Professional? Join Marketplace" : "Existing Member? Access Dashboard"}
+             </button>
+          </div>
+       </div>
+    </div>
+  );
+};
+
+const App: React.FC = () => {
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      if (currentUser) fetchProfile(currentUser.id);
+      else setLoading(false);
+    });
+
+    // Listen for changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      if (currentUser) fetchProfile(currentUser.id);
+      else {
+        setProfile(null);
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const fetchProfile = async (id: string) => {
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single();
+    if (!error) setProfile(data);
+    setLoading(false);
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
+
+  if (loading) return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#1a2332]">
+       <div className="text-orange-500 animate-spin mb-8"><Loader2 size={64}/></div>
+       <div className="text-white font-black uppercase tracking-[0.4em] text-xs">Supabase Secure Handshake...</div>
+    </div>
+  );
+
+  return (
     <HashRouter>
-      <Layout user={user} onLogout={handleLogout}>
+      <Layout user={user} profile={profile} onLogout={handleLogout}>
         <Routes>
           <Route path="/" element={<ListingBrowser />} />
           <Route path="/listing/:id" element={<ListingDetails />} />
           <Route 
             path="/list-equipment" 
-            element={user ? <CreateListing /> : <Navigate to="/auth" />} 
+            element={user ? <CreateListing user={user} profile={profile} /> : <Navigate to="/auth" />} 
           />
           <Route 
             path="/dashboard" 
-            element={user ? <Dashboard /> : <Navigate to="/auth" />} 
+            element={user ? <Dashboard user={user} profile={profile} /> : <Navigate to="/auth" />} 
           />
           <Route 
             path="/profile" 
-            element={user ? <Profile user={user} onUpdateUser={handleUpdateUser} /> : <Navigate to="/auth" />} 
+            element={user ? <Profile user={user} profile={profile} onUpdateUser={fetchProfile} /> : <Navigate to="/auth" />} 
           />
-          <Route path="/auth" element={
-            <div className="flex items-center justify-center min-h-[75vh] px-4">
-              <div className="bg-white p-12 md:p-16 rounded-[3rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] border border-slate-50 max-w-lg w-full text-center">
-                <div className="inline-flex items-center justify-center p-4 bg-slate-50 rounded-3xl mb-8">
-                  <div className="text-[#1a2332]">
-                    <div className="relative">
-                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-shopping-bag"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                      <div className="absolute -bottom-1 -right-1 bg-white p-1 rounded-full shadow-md">
-                        <div className="w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center">
-                           <div className="w-2 h-2 bg-white rounded-full"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <h2 className="text-3xl font-black mb-4 uppercase tracking-tighter text-[#1a2332]">Welcome Back</h2>
-                <p className="text-slate-500 font-bold uppercase tracking-widest text-xs mb-10">Sign in to Survey Store Ghana</p>
-                <div className="space-y-4">
-                  <button 
-                    onClick={() => setUser(MOCK_USERS[0])}
-                    className="w-full bg-[#1a2332] text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-all shadow-xl active:scale-[0.98]"
-                  >
-                    James Survey (Seller Profile)
-                  </button>
-                  <button 
-                    onClick={() => setUser(MOCK_USERS[1])}
-                    className="w-full border-2 border-slate-100 text-[#1a2332] py-5 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-50 transition-all active:scale-[0.98]"
-                  >
-                    Sarah Eng (Buyer Profile)
-                  </button>
-                </div>
-                <p className="mt-8 text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">Ghana's Professional Geospatial Hub</p>
-              </div>
-            </div>
-          } />
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Layout>
     </HashRouter>
