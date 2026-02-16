@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, MapPin, ShieldCheck, DollarSign, MessageCircle, Share2, Info, Check, Star } from 'lucide-react';
+import { ChevronLeft, MapPin, ShieldCheck, Calendar, DollarSign, MessageCircle, Share2, Info, ChevronRight, Check, Star, ShieldAlert } from 'lucide-react';
 import { MOCK_LISTINGS, MOCK_USERS } from '../constants.tsx';
-import { TransactionType } from '../types.ts';
+import { TransactionType } from '../types';
 
 const ListingDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();

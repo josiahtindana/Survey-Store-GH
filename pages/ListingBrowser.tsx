@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Search, Zap, ArrowRight, Loader2, ShieldCheck, Award, Cpu
+  Search, Filter, MapPin, Zap, ShoppingCart, Calendar, ArrowRight, Loader2, ShieldCheck, Award, Compass, Cpu
 } from 'lucide-react';
-import { supabase } from '../supabase.ts';
-import { parseSmartSearch } from '../geminiService.ts';
+import { supabase } from '../App';
+import { parseSmartSearch } from '../geminiService';
 
 const BACKGROUND_VIDEOS = [
   "https://assets.mixkit.co/videos/preview/mixkit-engineer-working-with-a-tablet-and-measuring-tools-34531-large.mp4",
   "https://assets.mixkit.co/videos/preview/mixkit-top-view-of-a-construction-site-with-cranes-and-trucks-42410-large.mp4"
 ];
+
+const BRANDS = ["Leica Geosystems", "Trimble", "Topcon", "Sokkia", "GeoMax", "Nikon", "Faro", "DJI Enterprise"];
 
 const ListingBrowser: React.FC = () => {
   const [listings, setListings] = useState<any[]>([]);
@@ -23,29 +25,27 @@ const ListingBrowser: React.FC = () => {
 
   const fetchListings = async () => {
     setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('listings')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (!error && data) {
-        setListings(data);
-      }
-    } catch (e) {
-      console.error("Failed to fetch listings:", e);
-    } finally {
-      setLoading(false);
+    const { data, error } = await supabase
+      .from('listings')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (!error && data) {
+      setListings(data);
     }
+    setLoading(false);
   };
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.length > 5) {
       setIsSmartSearchLoading(true);
-      await parseSmartSearch(searchQuery);
+      const parsed = await parseSmartSearch(searchQuery);
       setIsSmartSearchLoading(false);
+      // Logic for advanced filtering based on AI results would go here
+      // For now, let's just use text search
     }
+    // Perform simple search
     const { data } = await supabase
       .from('listings')
       .select('*')

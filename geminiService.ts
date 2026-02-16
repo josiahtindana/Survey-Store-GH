@@ -1,5 +1,6 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
-import { EquipmentCategory, Condition } from './types.ts';
+import { EquipmentCategory, Condition } from './types';
 
 // Always use const ai = new GoogleGenAI({apiKey: process.env.API_KEY});
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });

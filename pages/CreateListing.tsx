@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react';
-import { Camera, Zap, Loader2, ShieldCheck, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { Camera, Zap, Loader2, Calendar, ShieldCheck, Info, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { analyzeEquipmentImage } from '../geminiService.ts';
-import { EquipmentCategory } from '../types.ts';
+import { analyzeEquipmentImage } from '../geminiService';
+import { EquipmentCategory, Condition } from '../types';
 
 const CreateListing: React.FC = () => {
   const [loading, setLoading] = useState(false);

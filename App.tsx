@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { Loader2, Lock, Mail } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
+import { Loader2, Lock, Mail, ShoppingBag } from 'lucide-react';
 
-import { supabase } from './supabase.ts';
-import Layout from './components/Layout.tsx';
-import ListingBrowser from './pages/ListingBrowser.tsx';
-import ListingDetails from './pages/ListingDetails.tsx';
-import CreateListing from './pages/CreateListing.tsx';
-import Dashboard from './pages/Dashboard.tsx';
-import Profile from './pages/Profile.tsx';
+import Layout from './components/Layout';
+import ListingBrowser from './pages/ListingBrowser';
+import ListingDetails from './pages/ListingDetails';
+import CreateListing from './pages/CreateListing';
+import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
+
+// --- Supabase Config ---
+const SUPABASE_URL = 'https://plykrntpuquolzvrauqa.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_2hMyeBbzTMTQmAcraNlEUw_HToky5Tf';
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const AuthPage = () => {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
@@ -96,34 +101,21 @@ const App: React.FC = () => {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (id: string) => {
-    try {
-      const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single();
-      if (!error) setProfile(data);
-    } catch (e) {
-      console.error("Error fetching profile:", e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    // Check initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
-      if (currentUser) {
-        fetchProfile(currentUser.id);
-      } else {
-        setLoading(false);
-      }
+      if (currentUser) fetchProfile(currentUser.id);
+      else setLoading(false);
     });
 
+    // Listen for changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
-      if (currentUser) {
-        fetchProfile(currentUser.id);
-      } else {
+      if (currentUser) fetchProfile(currentUser.id);
+      else {
         setProfile(null);
         setLoading(false);
       }
@@ -132,12 +124,14 @@ const App: React.FC = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  const fetchProfile = async (id: string) => {
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single();
+    if (!error) setProfile(data);
+    setLoading(false);
   };
 
-  const handleProfileUpdate = () => {
-    if (user) fetchProfile(user.id);
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
   };
 
   if (loading) return (
@@ -163,7 +157,7 @@ const App: React.FC = () => {
           />
           <Route 
             path="/profile" 
-            element={user ? <Profile user={user} profile={profile} onUpdateUser={handleProfileUpdate} /> : <Navigate to="/auth" />} 
+            element={user ? <Profile user={user} profile={profile} onUpdateUser={fetchProfile} /> : <Navigate to="/auth" />} 
           />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="*" element={<Navigate to="/" />} />
